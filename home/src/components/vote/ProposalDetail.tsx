@@ -166,10 +166,6 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
 
   return (
     <section className="detail-wrapper">
-      <button className="brutal-btn brutal-btn--ghost back-button" onClick={onBack}>
-        ← Back to proposals
-      </button>
-
       <div className="detail-card">
         <div className="detail-header">
           <h3 className="scribble">{meta.title}</h3>
@@ -212,21 +208,23 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
         </div>
 
         <div className="detail-actions">
-          <button
-            className="brutal-btn brutal-btn--dark"
-            onClick={finalize}
-            disabled={!canFinalize || sending || !instance || zamaLoading || !!zamaError}
-          >
-            Finalize & Verify
+          <button className="brutal-btn brutal-btn--ghost back-button" onClick={onBack}>
+            ← Back to proposals
           </button>
-          {pending && <span className="status-pill pending">Decryption pending…</span>}
+
+          <div className="detail-actions__right">
+            <button
+              className="brutal-btn brutal-btn--dark"
+              onClick={finalize}
+              disabled={!canFinalize || sending || !instance || zamaLoading || !!zamaError}
+            >
+              Finalize & Verify
+            </button>
+            {pending && <span className="status-pill pending">Decryption pending…</span>}
+          </div>
         </div>
 
-        {error && (
-          <div className="alert alert--error">
-            ❌ {error}
-          </div>
-        )}
+        {error && <div className="alert alert--error">❌ {error}</div>}
       </div>
     </section>
   );

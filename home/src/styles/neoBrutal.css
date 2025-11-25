@@ -536,10 +536,17 @@
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+}
+
+.detail-actions__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .back-button {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .brutal-btn--block {

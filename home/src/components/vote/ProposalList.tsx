@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
 import { SECRET_VOTE_ABI, SECRET_VOTE_ADDRESS } from '../../config/contract';
@@ -21,57 +21,77 @@ export function ProposalList() {
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [metas, setMetas] = useState<Record<number, Meta>>({});
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setLoading(true);
-        const total = (await client.readContract({
-          address: SECRET_VOTE_ADDRESS as `0x${string}`,
-          abi: SECRET_VOTE_ABI,
-          functionName: 'getProposalCount',
-          args: [],
-        })) as bigint;
-        if (!mounted) return;
-        setCount(Number(total));
-        const metas: Record<number, Meta> = {};
-        for (let i = 0; i < Number(total); i++) {
-          const res = (await client.readContract({
-            address: SECRET_VOTE_ADDRESS as `0x${string}`,
-            abi: SECRET_VOTE_ABI,
-            functionName: 'getProposal',
-            args: [BigInt(i)],
-          })) as readonly [string, readonly string[], bigint, bigint, boolean, boolean];
-          const voters = (await client.readContract({
-            address: SECRET_VOTE_ADDRESS as `0x${string}`,
-            abi: SECRET_VOTE_ABI,
-            functionName: 'getVoterCount',
-            args: [BigInt(i)],
-          })) as bigint;
-          metas[i] = {
-            title: res[0],
-            options: res[1],
-            startTime: res[2],
-            endTime: res[3],
-            finalized: res[4],
-            pending: res[5],
-            voters: Number(voters),
-          };
-        }
-        if (!mounted) return;
-        setMetas(metas);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    mountedRef.current = true;
     return () => {
-      mounted = false;
+      mountedRef.current = false;
     };
   }, []);
 
+  const fetchProposals = useCallback(async () => {
+    if (!mountedRef.current) return;
+    setLoading(true);
+    try {
+      const total = (await client.readContract({
+        address: SECRET_VOTE_ADDRESS as `0x${string}`,
+        abi: SECRET_VOTE_ABI,
+        functionName: 'getProposalCount',
+        args: [],
+      })) as bigint;
+      if (!mountedRef.current) return;
+      setCount(Number(total));
+      const freshMetas: Record<number, Meta> = {};
+      for (let i = 0; i < Number(total); i++) {
+        const res = (await client.readContract({
+          address: SECRET_VOTE_ADDRESS as `0x${string}`,
+          abi: SECRET_VOTE_ABI,
+          functionName: 'getProposal',
+          args: [BigInt(i)],
+        })) as readonly [string, readonly string[], bigint, bigint, boolean, boolean];
+        const voters = (await client.readContract({
+          address: SECRET_VOTE_ADDRESS as `0x${string}`,
+          abi: SECRET_VOTE_ABI,
+          functionName: 'getVoterCount',
+          args: [BigInt(i)],
+        })) as bigint;
+        freshMetas[i] = {
+          title: res[0],
+          options: res[1],
+          startTime: res[2],
+          endTime: res[3],
+          finalized: res[4],
+          pending: res[5],
+          voters: Number(voters),
+        };
+      }
+      if (!mountedRef.current) return;
+      setMetas(freshMetas);
+    } catch (err) {
+      console.error('Failed to load proposals', err);
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProposals();
+  }, [fetchProposals]);
+
   if (selected != null) {
-    return <ProposalDetail id={selected} meta={metas[selected]!} onBack={() => setSelected(null)} />;
+    return (
+      <ProposalDetail
+        id={selected}
+        meta={metas[selected]!}
+        onBack={() => {
+          setSelected(null);
+          fetchProposals();
+        }}
+      />
+    );
   }
 
   const getStatusBadge = (meta: Meta) => {
