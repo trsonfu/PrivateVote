@@ -4,7 +4,7 @@ import { ethers, fhevm } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { FhevmType } from "@fhevm/hardhat-plugin";
 
-import { SecretVote, SecretVote__factory } from "../types";
+import { PrivateVote, PrivateVote__factory } from "../types";
 
 type Signers = {
   deployer: HardhatEthersSigner;
@@ -13,15 +13,15 @@ type Signers = {
 };
 
 async function deployFixture() {
-  const factory = (await ethers.getContractFactory("SecretVote")) as SecretVote__factory;
-  const contract = (await factory.deploy()) as SecretVote;
+  const factory = (await ethers.getContractFactory("PrivateVote")) as PrivateVote__factory;
+  const contract = (await factory.deploy()) as PrivateVote;
   const address = await contract.getAddress();
   return { contract, address };
 }
 
-describe("SecretVote", function () {
+describe("PrivateVote", function () {
   let signers: Signers;
-  let contract: SecretVote;
+  let contract: PrivateVote;
   let address: string;
 
   before(async function () {

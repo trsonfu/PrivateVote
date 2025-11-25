@@ -12,7 +12,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import "./tasks/accounts";
-import "./tasks/SecretVote";
+import "./tasks/PrivateVote";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 

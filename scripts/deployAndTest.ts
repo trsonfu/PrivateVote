@@ -1,17 +1,17 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  console.log("🚀 Deploying SecretVote contract...");
+  console.log("🚀 Deploying PrivateVote contract...");
   
   const [deployer] = await ethers.getSigners();
   console.log("Deploying with account:", deployer.address);
   
-  const SecretVote = await ethers.getContractFactory("SecretVote");
-  const secretVote = await SecretVote.deploy();
-  await secretVote.waitForDeployment();
+  const PrivateVote = await ethers.getContractFactory("PrivateVote");
+  const privateVote = await PrivateVote.deploy();
+  await privateVote.waitForDeployment();
   
-  const contractAddress = await secretVote.getAddress();
-  console.log("✅ SecretVote deployed to:", contractAddress);
+  const contractAddress = await privateVote.getAddress();
+  console.log("✅ PrivateVote deployed to:", contractAddress);
   
   // Test basic functionality
   console.log("\n📊 Testing basic functionality...");
@@ -20,7 +20,7 @@ async function main() {
   const endTime = startTime + 3600; // End in 1 hour
   
   console.log("Creating a test vote...");
-  const tx = await secretVote.createVote(
+  const tx = await privateVote.createVote(
     "Favorite Programming Language",
     ["JavaScript", "TypeScript", "Rust", "Go"],
     startTime,
@@ -29,10 +29,10 @@ async function main() {
   await tx.wait();
   console.log("✅ Vote created successfully!");
   
-  const totalVotes = await secretVote.getTotalVotes();
+  const totalVotes = await privateVote.getTotalVotes();
   console.log("📈 Total votes created:", totalVotes.toString());
   
-  const voteInfo = await secretVote.getVoteInfo(0);
+  const voteInfo = await privateVote.getVoteInfo(0);
   console.log("📋 Vote details:");
   console.log("  Title:", voteInfo.title);
   console.log("  Options:", voteInfo.options);

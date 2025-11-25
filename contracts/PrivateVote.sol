@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {FHE, euint32, externalEuint32, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
-contract SecretVote is ZamaEthereumConfig {
+contract PrivateVote is ZamaEthereumConfig {
     struct Proposal {
         string title;
         string[] options;

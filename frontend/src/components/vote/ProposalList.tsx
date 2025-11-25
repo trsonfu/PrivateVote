@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
-import { SECRET_VOTE_ABI, SECRET_VOTE_ADDRESS } from '../../config/contract';
+import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from '../../config/contract';
 import { ProposalDetail } from './ProposalDetail';
 
 const client = createPublicClient({ chain: sepolia, transport: http() });
@@ -35,8 +35,8 @@ export function ProposalList() {
     setLoading(true);
     try {
       const total = (await client.readContract({
-        address: SECRET_VOTE_ADDRESS as `0x${string}`,
-        abi: SECRET_VOTE_ABI,
+        address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
+        abi: PRIVATE_VOTE_ABI,
         functionName: 'getProposalCount',
         args: [],
       })) as bigint;
@@ -45,14 +45,14 @@ export function ProposalList() {
       const freshMetas: Record<number, Meta> = {};
       for (let i = 0; i < Number(total); i++) {
         const res = (await client.readContract({
-          address: SECRET_VOTE_ADDRESS as `0x${string}`,
-          abi: SECRET_VOTE_ABI,
+          address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
+          abi: PRIVATE_VOTE_ABI,
           functionName: 'getProposal',
           args: [BigInt(i)],
         })) as readonly [string, readonly string[], bigint, bigint, boolean, boolean];
         const voters = (await client.readContract({
-          address: SECRET_VOTE_ADDRESS as `0x${string}`,
-          abi: SECRET_VOTE_ABI,
+          address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
+          abi: PRIVATE_VOTE_ABI,
           functionName: 'getVoterCount',
           args: [BigInt(i)],
         })) as bigint;

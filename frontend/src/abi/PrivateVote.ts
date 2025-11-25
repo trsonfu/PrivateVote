@@ -1,6 +1,6 @@
-// Auto-copied from deployments/sepolia/SecretVote.json (abi)
+// Auto-copied from deployments/sepolia/PrivateVote.json (abi)
 // Do not import from repo root; keep frontend self-contained.
-export const SECRET_VOTE_ABI = [
+export const PRIVATE_VOTE_ABI = [
   {
     inputs: [],
     name: "InvalidKMSSignatures",
@@ -393,7 +393,7 @@ export const SECRET_VOTE_ABI = [
             type: "bool",
           },
         ],
-        internalType: "struct SecretVote.VoteInfo",
+        internalType: "struct PrivateVote.VoteInfo",
         name: "",
         type: "tuple",
       },
@@ -505,4 +505,4 @@ export const SECRET_VOTE_ABI = [
   },
 ] as const;
 
-export default SECRET_VOTE_ABI;
+export default PRIVATE_VOTE_ABI;

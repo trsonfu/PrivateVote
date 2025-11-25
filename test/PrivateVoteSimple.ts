@@ -1,20 +1,20 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import type { SecretVote } from "../types";
+import type { PrivateVote } from "../types";
 import type { Signer } from "ethers";
 
-describe("SecretVote - Simple Tests", function () {
-  let secretVote: SecretVote;
+describe("PrivateVote - Simple Tests", function () {
+  let privateVote: PrivateVote;
   let owner: Signer;
   let voter1: Signer;
 
   beforeEach(async function () {
     [owner, voter1] = await ethers.getSigners();
 
-    const SecretVoteFactory = await ethers.getContractFactory("SecretVote");
-    secretVote = await SecretVoteFactory.deploy();
-    await secretVote.waitForDeployment();
+    const PrivateVoteFactory = await ethers.getContractFactory("PrivateVote");
+    privateVote = await PrivateVoteFactory.deploy();
+    await privateVote.waitForDeployment();
   });
 
   describe("Vote Creation", function () {
@@ -25,11 +25,11 @@ describe("SecretVote - Simple Tests", function () {
       const startTime = now + 60n; // Start in 1 minute
       const endTime = startTime + 3600n; // End 1 hour after start
 
-      const tx = await secretVote.createVote(title, options, startTime, endTime);
+      const tx = await privateVote.createVote(title, options, startTime, endTime);
       await tx.wait();
 
       // Check vote info
-      const voteInfo = await secretVote.getVoteInfo(0);
+      const voteInfo = await privateVote.getVoteInfo(0);
       expect(voteInfo.title).to.equal(title);
       expect(voteInfo.options).to.deep.equal(options);
       expect(voteInfo.startTime).to.equal(startTime);
@@ -39,19 +39,19 @@ describe("SecretVote - Simple Tests", function () {
     });
 
     it("Should track total votes correctly", async function () {
-      expect(await secretVote.getTotalVotes()).to.equal(0);
+      expect(await privateVote.getTotalVotes()).to.equal(0);
 
       const now = BigInt(await time.latest());
       const startTime = now + 60n;
       const endTime = startTime + 3600n;
 
       // Create first vote
-      await secretVote.createVote("Vote 1", ["A", "B"], startTime, endTime);
-      expect(await secretVote.getTotalVotes()).to.equal(1);
+      await privateVote.createVote("Vote 1", ["A", "B"], startTime, endTime);
+      expect(await privateVote.getTotalVotes()).to.equal(1);
 
       // Create second vote
-      await secretVote.createVote("Vote 2", ["X", "Y"], startTime, endTime);
-      expect(await secretVote.getTotalVotes()).to.equal(2);
+      await privateVote.createVote("Vote 2", ["X", "Y"], startTime, endTime);
+      expect(await privateVote.getTotalVotes()).to.equal(2);
     });
 
     it("Should revert with insufficient options", async function () {
@@ -61,7 +61,7 @@ describe("SecretVote - Simple Tests", function () {
       const startTime = now + 60n;
       const endTime = startTime + 3600n;
 
-      await expect(secretVote.createVote(title, options, startTime, endTime)).to.be.revertedWith(
+      await expect(privateVote.createVote(title, options, startTime, endTime)).to.be.revertedWith(
         "Must have at least 2 options",
       );
     });
@@ -73,7 +73,7 @@ describe("SecretVote - Simple Tests", function () {
       const startTime = now > 60n ? now - 60n : 0n; // Past time
       const endTime = startTime + 3600n;
 
-      await expect(secretVote.createVote(title, options, startTime, endTime)).to.be.revertedWith(
+      await expect(privateVote.createVote(title, options, startTime, endTime)).to.be.revertedWith(
         "Start time must be in the future",
       );
     });
@@ -85,7 +85,7 @@ describe("SecretVote - Simple Tests", function () {
       const startTime = now + 3600n;
       const endTime = startTime - 1n; // End before start
 
-      await expect(secretVote.createVote(title, options, startTime, endTime)).to.be.revertedWith(
+      await expect(privateVote.createVote(title, options, startTime, endTime)).to.be.revertedWith(
         "End time must be after start time",
       );
     });
@@ -99,9 +99,9 @@ describe("SecretVote - Simple Tests", function () {
       const startTime = now + 120n;
       const endTime = startTime + 1800n;
 
-      await secretVote.createVote(title, options, startTime, endTime);
+      await privateVote.createVote(title, options, startTime, endTime);
 
-      const voteInfo = await secretVote.getVoteInfo(0);
+      const voteInfo = await privateVote.getVoteInfo(0);
       expect(voteInfo.title).to.equal(title);
       expect(voteInfo.options).to.deep.equal(options);
       expect(voteInfo.startTime).to.equal(startTime);
@@ -115,11 +115,11 @@ describe("SecretVote - Simple Tests", function () {
       const startTime = now + 60n;
       const endTime = startTime + 3600n;
 
-      await secretVote.createVote("Has Voted Test", ["A", "B"], startTime, endTime);
+      await privateVote.createVote("Has Voted Test", ["A", "B"], startTime, endTime);
 
       // Initially, no one has voted
-      expect(await secretVote.hasVoted(0, await owner.getAddress())).to.equal(false);
-      expect(await secretVote.hasVoted(0, await voter1.getAddress())).to.equal(false);
+      expect(await privateVote.hasVoted(0, await owner.getAddress())).to.equal(false);
+      expect(await privateVote.hasVoted(0, await voter1.getAddress())).to.equal(false);
     });
   });
 });

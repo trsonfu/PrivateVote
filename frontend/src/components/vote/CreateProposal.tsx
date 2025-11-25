@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Contract } from 'ethers';
-import { SECRET_VOTE_ABI, SECRET_VOTE_ADDRESS } from '../../config/contract';
+import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from '../../config/contract';
 import { useEthersSigner } from '../../hooks/useEthersSigner';
 
 declare global {
@@ -58,7 +58,7 @@ export function CreateProposal() {
       const endTs = toUnix(endLocal);
 
       setSending(true);
-      const c = new Contract(SECRET_VOTE_ADDRESS, SECRET_VOTE_ABI, signer);
+      const c = new Contract(PRIVATE_VOTE_ADDRESS, PRIVATE_VOTE_ABI, signer);
       const tx = await c.createProposal(title, options, startTs, endTs);
       setTxHash(tx.hash);
       await tx.wait();

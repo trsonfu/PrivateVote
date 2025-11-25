@@ -2,10 +2,10 @@ import { task } from "hardhat/config";
 import type { TaskArguments } from "hardhat/types";
 import { FhevmType } from "@fhevm/hardhat-plugin";
 
-task("sv:address", "Print SecretVote address").setAction(async (_, hre) => {
+task("sv:address", "Print PrivateVote address").setAction(async (_, hre) => {
   const { deployments } = hre;
-  const d = await deployments.get("SecretVote");
-  console.log(`SecretVote address: ${d.address}`);
+  const d = await deployments.get("PrivateVote");
+  console.log(`PrivateVote address: ${d.address}`);
 });
 
 task("sv:create", "Create a proposal")
@@ -15,9 +15,9 @@ task("sv:create", "Create a proposal")
   .addParam("end", "End timestamp (seconds)")
   .setAction(async (args: TaskArguments, hre) => {
     const { ethers, deployments } = hre;
-    const d = await deployments.get("SecretVote");
+    const d = await deployments.get("PrivateVote");
     const [signer] = await ethers.getSigners();
-    const c = await ethers.getContractAt("SecretVote", d.address);
+    const c = await ethers.getContractAt("PrivateVote", d.address);
     const options = (args.options as string).split(",").map((s) => s.trim());
     const tx = await c.connect(signer).createProposal(args.title, options, BigInt(args.start), BigInt(args.end));
     console.log(`tx: ${tx.hash}`);
@@ -31,9 +31,9 @@ task("sv:vote", "Vote on a proposal (encrypted)")
   .setAction(async (args: TaskArguments, hre) => {
     const { ethers, deployments, fhevm } = hre;
     await fhevm.initializeCLIApi();
-    const d = await deployments.get("SecretVote");
+    const d = await deployments.get("PrivateVote");
     const [signer] = await ethers.getSigners();
-    const c = await ethers.getContractAt("SecretVote", d.address);
+    const c = await ethers.getContractAt("PrivateVote", d.address);
 
     const enc = await fhevm
       .createEncryptedInput(d.address, signer.address)
@@ -52,9 +52,9 @@ task("sv:decrypt-option", "Decrypt a specific option count (local/mock only)")
   .setAction(async (args: TaskArguments, hre) => {
     const { ethers, deployments, fhevm } = hre;
     await fhevm.initializeCLIApi();
-    const d = await deployments.get("SecretVote");
+    const d = await deployments.get("PrivateVote");
     const [signer] = await ethers.getSigners();
-    const c = await ethers.getContractAt("SecretVote", d.address);
+    const c = await ethers.getContractAt("PrivateVote", d.address);
     const enc = await c.getEncryptedCount(parseInt(args.id), parseInt(args.opt));
     if (enc === ethers.ZeroHash) {
       console.log("Encrypted: 0x0\nClear: 0");
@@ -69,9 +69,9 @@ task("sv:finalize", "Request finalize/decrypt totals")
   .setAction(async (args: TaskArguments, hre) => {
     const { ethers, deployments, fhevm } = hre;
     await fhevm.initializeCLIApi();
-    const d = await deployments.get("SecretVote");
+    const d = await deployments.get("PrivateVote");
     const [signer] = await ethers.getSigners();
-    const c = await ethers.getContractAt("SecretVote", d.address);
+    const c = await ethers.getContractAt("PrivateVote", d.address);
     const proposalId = parseInt(args.id);
     const finalizeTx = await c.connect(signer).requestFinalize(proposalId);
     console.log(`requestFinalize tx: ${finalizeTx.hash}`);

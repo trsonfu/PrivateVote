@@ -4,7 +4,7 @@ import { sepolia } from "viem/chains";
 import { Contract } from "ethers";
 import { useZamaInstance } from "../../hooks/useZamaInstance";
 import { useEthersSigner } from "../../hooks/useEthersSigner";
-import { SECRET_VOTE_ABI, SECRET_VOTE_ADDRESS } from "../../config/contract";
+import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from "../../config/contract";
 
 const client = createPublicClient({ chain: sepolia, transport: http() });
 
@@ -39,8 +39,8 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
       try {
         if (finalized) {
           const res = (await client.readContract({
-            address: SECRET_VOTE_ADDRESS as `0x${string}`,
-            abi: SECRET_VOTE_ABI,
+            address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
+            abi: PRIVATE_VOTE_ABI,
             functionName: "getResults",
             args: [BigInt(id)],
           })) as readonly (bigint | number)[];
@@ -50,8 +50,8 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
           setCounts(null);
         }
         const vc = (await client.readContract({
-          address: SECRET_VOTE_ADDRESS as `0x${string}`,
-          abi: SECRET_VOTE_ABI,
+          address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
+          abi: PRIVATE_VOTE_ABI,
           functionName: "getVoterCount",
           args: [BigInt(id)],
         })) as bigint;
@@ -73,16 +73,16 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
       if (!signer) throw new Error("Connect wallet");
       if (!instance) throw new Error("Encryption not ready");
       setSending(true);
-      const c = new Contract(SECRET_VOTE_ADDRESS, SECRET_VOTE_ABI, signer);
-      const buf = instance.createEncryptedInput(SECRET_VOTE_ADDRESS, await signer.getAddress());
+      const c = new Contract(PRIVATE_VOTE_ADDRESS, PRIVATE_VOTE_ABI, signer);
+      const buf = instance.createEncryptedInput(PRIVATE_VOTE_ADDRESS, await signer.getAddress());
       buf.add32(optionIndex);
       const encrypted = await buf.encrypt();
       const tx = await c.vote(id, encrypted.handles[0], encrypted.inputProof);
       await tx.wait();
       try {
         const vc = (await client.readContract({
-          address: SECRET_VOTE_ADDRESS as `0x${string}`,
-          abi: SECRET_VOTE_ABI,
+          address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
+          abi: PRIVATE_VOTE_ABI,
           functionName: "getVoterCount",
           args: [BigInt(id)],
         })) as bigint;
@@ -103,7 +103,7 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
       if (!signer) throw new Error("Connect wallet");
       if (!instance) throw new Error("Encryption not ready");
       setSending(true);
-      const contract = new Contract(SECRET_VOTE_ADDRESS, SECRET_VOTE_ABI, signer);
+      const contract = new Contract(PRIVATE_VOTE_ADDRESS, PRIVATE_VOTE_ABI, signer);
       let encryptedCounts: string[] = [];
       try {
         const tx = await contract.requestFinalize(id);
