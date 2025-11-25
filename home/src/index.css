@@ -1,0 +1,52 @@
+:root {
+  font-family: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #111;
+  background-color: #fff7e1;
+  --fh-yellow: #ffd131;
+  --fh-yellow-dark: #ffb800;
+  --fh-ink: #111111;
+  --fh-cream: #fff7e1;
+  --fh-muted: #3f3d56;
+  --fh-outline: 4px solid #111111;
+  --fh-radius: 18px;
+  --fh-shadow-offset: 4px 4px 0 #111111;
+  --fh-shadow-offset-lg: 8px 8px 0 #111111;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Cabin+Sketch:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fh-cream);
+  color: var(--fh-ink);
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #111;
+  outline-offset: 2px;
+}
