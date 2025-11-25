@@ -21,7 +21,7 @@
 }
 
 .scribble {
-  font-family: 'Cabin Sketch', cursive;
+  font-family: "Cabin Sketch", cursive;
   letter-spacing: 0.5px;
 }
 
@@ -478,6 +478,92 @@
   font-weight: 500;
 }
 
+.toast {
+  position: fixed;
+  right: 32px;
+  top: 32px;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 360px;
+  padding: 18px 22px;
+  border: var(--fh-outline);
+  border-radius: var(--fh-radius);
+  box-shadow: var(--fh-shadow-offset-lg);
+  background: #fff;
+  animation: toast-pop 0.2s ease-out;
+}
+
+.toast__body {
+  flex: 1;
+  font-weight: 700;
+}
+
+.toast__title {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.toast__caption {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.toast__action {
+  margin-top: 12px;
+  border: var(--fh-outline);
+  background: transparent;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: var(--fh-radius);
+  cursor: pointer;
+  box-shadow: var(--fh-shadow-offset);
+}
+
+.toast__close {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.toast--success {
+  background: #c9ffb5;
+}
+
+.toast--error {
+  background: #ffded9;
+}
+
+.toast--info {
+  background: #fff6c7;
+}
+
+@keyframes toast-pop {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .toast {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+    max-width: unset;
+  }
+}
+
 .loading-inline {
   margin-top: 16px;
   display: flex;
@@ -597,4 +683,3 @@
   background: #fff;
   box-shadow: var(--fh-shadow-offset);
 }
-

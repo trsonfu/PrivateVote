@@ -5,8 +5,15 @@ import { Contract } from "ethers";
 import { useZamaInstance } from "../../hooks/useZamaInstance";
 import { useEthersSigner } from "../../hooks/useEthersSigner";
 import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from "../../config/contract";
+import { Toast } from "../ui/Toast";
 
 const client = createPublicClient({ chain: sepolia, transport: http() });
+
+type ToastState = {
+  title: string;
+  caption?: string;
+  variant: "success" | "error" | "info";
+};
 
 export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; onBack: () => void }) {
   const [counts, setCounts] = useState<number[] | null>(null);
@@ -17,6 +24,7 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
   const signerPromise = useEthersSigner();
   const [finalized, setFinalized] = useState<boolean>(meta.finalized);
   const [pending, setPending] = useState<boolean>(meta.pending);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
     setFinalized(meta.finalized);
@@ -88,9 +96,19 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
         })) as bigint;
         setVoters(Number(vc));
       } catch {}
-      alert("Voted");
+      setToast({
+        title: "✅ Vote submitted",
+        caption: `Transaction: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
+        variant: "success",
+      });
     } catch (e: any) {
-      setError(e.message ?? String(e));
+      const message = e.message ?? String(e);
+      setError(message);
+      setToast({
+        title: "❌ Vote failed",
+        caption: message,
+        variant: "error",
+      });
     } finally {
       setSending(false);
     }
@@ -116,7 +134,11 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
           setCounts(Array.from(finalResults).map((x) => Number(x)));
           setFinalized(true);
           setPending(false);
-          alert("Proposal already finalized on-chain.");
+          setToast({
+            title: "ℹ️ Already finalized",
+            caption: "Results were already available on-chain.",
+            variant: "info",
+          });
           return;
         }
         if (!message.includes("pending")) {
@@ -156,9 +178,19 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
       setCounts(orderedCounts);
       setFinalized(true);
       setPending(false);
-      alert("Đã giải mã công khai và xác minh kết quả.");
+      setToast({
+        title: "✅ Proposal finalized",
+        caption: "Public decryption verified on-chain.",
+        variant: "success",
+      });
     } catch (e: any) {
-      setError(e.message ?? String(e));
+      const message = e.message ?? String(e);
+      setError(message);
+      setToast({
+        title: "❌ Finalize failed",
+        caption: message,
+        variant: "error",
+      });
     } finally {
       setSending(false);
     }
@@ -225,6 +257,20 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
         </div>
 
         {error && <div className="alert alert--error">❌ {error}</div>}
+
+        <Toast
+          open={Boolean(toast)}
+          variant={toast?.variant ?? "info"}
+          autoHideMs={5000}
+          onClose={() => setToast(null)}
+        >
+          {toast && (
+            <div>
+              <div className="toast__title">{toast.title}</div>
+              {toast.caption && <div className="toast__caption">{toast.caption}</div>}
+            </div>
+          )}
+        </Toast>
       </div>
     </section>
   );

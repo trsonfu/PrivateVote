@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { Contract } from "ethers";
 import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from "../../config/contract";
 import { useEthersSigner } from "../../hooks/useEthersSigner";
+import { Toast } from "../ui/Toast";
 
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
+type ToastState = {
+  title: string;
+  caption?: string;
+  variant: "success" | "error" | "info";
+};
 
 export function CreateProposal() {
   const [title, setTitle] = useState("");
   const [opts, setOpts] = useState<string[]>(["", ""]);
   const [startLocal, setStartLocal] = useState<string>("");
   const [endLocal, setEndLocal] = useState<string>("");
-  const [txHash, setTxHash] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -56,7 +57,6 @@ export function CreateProposal() {
 
   const submit = async () => {
     setError(null);
-    setTxHash(null);
     try {
       const signer = await signerPromise;
       if (!signer) throw new Error("Connect wallet");
@@ -70,15 +70,25 @@ export function CreateProposal() {
       setSending(true);
       const c = new Contract(PRIVATE_VOTE_ADDRESS, PRIVATE_VOTE_ABI, signer);
       const tx = await c.createProposal(title, options, startTs, endTs);
-      setTxHash(tx.hash);
       await tx.wait();
       setTitle("");
       setOpts(["", ""]);
       const defaults = computeDefaultDateRange();
       setStartLocal(defaults.start);
       setEndLocal(defaults.end);
-    } catch (e: any) {
-      setError(e.message ?? String(e));
+      setToast({
+        title: "✅ Proposal created successfully!",
+        caption: `Transaction: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
+        variant: "success",
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+      setToast({
+        title: "❌ Proposal failed",
+        caption: message,
+        variant: "error",
+      });
     } finally {
       setSending(false);
     }
@@ -166,16 +176,16 @@ export function CreateProposal() {
         </div>
       )}
 
-      {txHash && (
-        <div className="alert alert--success">
-          ✅ Proposal created successfully!
-          <div className="alert-caption">
-            Transaction: {txHash.slice(0, 10)}...{txHash.slice(-8)}
-          </div>
-        </div>
-      )}
-
       {error && <div className="alert alert--error">❌ {error}</div>}
+
+      <Toast open={Boolean(toast)} variant={toast?.variant ?? "info"} autoHideMs={5000} onClose={() => setToast(null)}>
+        {toast && (
+          <div>
+            <div className="toast__title">{toast.title}</div>
+            {toast.caption && <div className="toast__caption">{toast.caption}</div>}
+          </div>
+        )}
+      </Toast>
     </section>
   );
 }
