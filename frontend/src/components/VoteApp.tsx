@@ -1,9 +1,9 @@
-import { useAccount } from 'wagmi';
-import { useEffect, useState } from 'react';
-import { ProposalList } from './vote/ProposalList';
-import { CreateProposal } from './vote/CreateProposal';
-import { ZamaStatus } from './ZamaStatus';
-import { Header } from './Header';
+import { useAccount } from "wagmi";
+import { useEffect, useState } from "react";
+import { ProposalList } from "./vote/ProposalList";
+import { CreateProposal } from "./vote/CreateProposal";
+import { ZamaStatus } from "./ZamaStatus";
+import { Header } from "./Header";
 
 const tabs = [
   { id: 'list', label: 'View Proposals', icon: '📋' },
@@ -46,6 +46,7 @@ const advantages = [
 export function VoteApp() {
   const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [refreshKey, setRefreshKey] = useState(0);
   const scrollToSection = (id: string, delay = 0) => {
     setTimeout(() => {
       requestAnimationFrame(() => {
@@ -155,14 +156,20 @@ export function VoteApp() {
               className={`tab-panel ${activeTab === "list" ? "active" : ""}`}
               aria-hidden={activeTab !== "list"}
             >
-              <ProposalList />
+              <ProposalList refreshKey={refreshKey} />
             </div>
             <div
               id="create-proposal"
               className={`tab-panel ${activeTab === "create" ? "active" : ""}`}
               aria-hidden={activeTab !== "create"}
             >
-              <CreateProposal />
+              <CreateProposal
+                onCreated={() => {
+                  setRefreshKey((key) => key + 1);
+                  setActiveTab("list");
+                  scrollToSection("view-proposals", 120);
+                }}
+              />
             </div>
           </div>
         </section>

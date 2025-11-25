@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPublicClient, http } from 'viem';
-import { sepolia } from 'viem/chains';
-import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from '../../config/contract';
-import { ProposalDetail } from './ProposalDetail';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPublicClient, http } from "viem";
+import { sepolia } from "viem/chains";
+import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from "../../config/contract";
+import { ProposalDetail } from "./ProposalDetail";
 
 const client = createPublicClient({ chain: sepolia, transport: http() });
 
@@ -16,11 +16,12 @@ type Meta = {
   voters: number;
 };
 
-export function ProposalList() {
+export function ProposalList({ refreshKey = 0 }: { refreshKey?: number }) {
   const [count, setCount] = useState<number>(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [metas, setMetas] = useState<Record<number, Meta>>({});
+  const [orderedIds, setOrderedIds] = useState<number[]>([]);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -67,7 +68,19 @@ export function ProposalList() {
         };
       }
       if (!mountedRef.current) return;
+      const sortedIds = Object.keys(freshMetas)
+        .map((id) => Number(id))
+        .sort((a, b) => {
+          const startA = Number(freshMetas[a]?.startTime ?? 0n);
+          const startB = Number(freshMetas[b]?.startTime ?? 0n);
+          if (startA === startB) {
+            return b - a;
+          }
+          return startB - startA;
+        });
       setMetas(freshMetas);
+      setOrderedIds(sortedIds);
+      setCount(sortedIds.length);
     } catch (err) {
       console.error('Failed to load proposals', err);
     } finally {
@@ -79,7 +92,7 @@ export function ProposalList() {
 
   useEffect(() => {
     fetchProposals();
-  }, [fetchProposals]);
+  }, [fetchProposals, refreshKey]);
 
   if (selected != null) {
     return (
@@ -129,22 +142,22 @@ export function ProposalList() {
 
       {!loading && count > 0 && (
         <div className="proposal-grid">
-          {Array.from({ length: count }).map((_, i) => (
+          {orderedIds.map((proposalId) => (
             <article
-              key={i}
+              key={proposalId}
               className="proposal-card"
-              onClick={() => setSelected(i)}
+              onClick={() => setSelected(proposalId)}
             >
               <div className="proposal-card__header">
                 <div>
-                  <h3 className="proposal-card__title">{metas[i]?.title ?? 'Loading...'}</h3>
-                  {metas[i] && getStatusBadge(metas[i])}
+                  <h3 className="proposal-card__title">{metas[proposalId]?.title ?? 'Loading...'}</h3>
+                  {metas[proposalId] && getStatusBadge(metas[proposalId])}
                 </div>
                 <button
                   className="brutal-btn brutal-btn--dark proposal-card__action"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelected(i);
+                    setSelected(proposalId);
                   }}
                 >
                   View Details
@@ -152,12 +165,12 @@ export function ProposalList() {
               </div>
 
               <div className="proposal-card__stats">
-                <div>📝 {metas[i]?.options?.length ?? 0} options</div>
-                <div>👥 {metas[i]?.voters ?? 0} voters</div>
+                <div>📝 {metas[proposalId]?.options?.length ?? 0} options</div>
+                <div>👥 {metas[proposalId]?.voters ?? 0} voters</div>
                 <div>
                   ⏰ Ends:{' '}
-                  {metas[i]?.endTime
-                    ? new Date(Number(metas[i].endTime) * 1000).toLocaleDateString()
+                  {metas[proposalId]?.endTime
+                    ? new Date(Number(metas[proposalId].endTime) * 1000).toLocaleDateString()
                     : 'Loading...'}
                 </div>
               </div>

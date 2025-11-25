@@ -10,7 +10,11 @@ type ToastState = {
   variant: "success" | "error" | "info";
 };
 
-export function CreateProposal() {
+type CreateProposalProps = {
+  onCreated?: () => void;
+};
+
+export function CreateProposal({ onCreated }: CreateProposalProps) {
   const [title, setTitle] = useState("");
   const [opts, setOpts] = useState<string[]>(["", ""]);
   const [startLocal, setStartLocal] = useState<string>("");
@@ -81,6 +85,7 @@ export function CreateProposal() {
         caption: `Transaction: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
         variant: "success",
       });
+      onCreated?.();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
