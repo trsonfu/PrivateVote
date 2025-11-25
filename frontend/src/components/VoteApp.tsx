@@ -4,6 +4,7 @@ import { ProposalList } from "./vote/ProposalList";
 import { CreateProposal } from "./vote/CreateProposal";
 import { ZamaStatus } from "./ZamaStatus";
 import { Header } from "./Header";
+import { Toast, type ToastVariant } from "./ui/Toast";
 
 const tabs = [
   { id: 'list', label: 'View Proposals', icon: '📋' },
@@ -47,6 +48,11 @@ export function VoteApp() {
   const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [appToast, setAppToast] = useState<{
+    title: string;
+    caption?: string;
+    variant: ToastVariant;
+  } | null>(null);
   const scrollToSection = (id: string, delay = 0) => {
     setTimeout(() => {
       requestAnimationFrame(() => {
@@ -169,11 +175,20 @@ export function VoteApp() {
                   setActiveTab("list");
                   scrollToSection("view-proposals", 120);
                 }}
+                onNotify={(toast) => setAppToast(toast)}
               />
             </div>
           </div>
         </section>
       </main>
+      <Toast open={Boolean(appToast)} variant={appToast?.variant ?? "info"} autoHideMs={5000} onClose={() => setAppToast(null)}>
+        {appToast && (
+          <div>
+            <div className="toast__title">{appToast.title}</div>
+            {appToast.caption && <div className="toast__caption">{appToast.caption}</div>}
+          </div>
+        )}
+      </Toast>
     </div>
   );
 }

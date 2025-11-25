@@ -2,24 +2,18 @@ import { useEffect, useState } from "react";
 import { Contract } from "ethers";
 import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from "../../config/contract";
 import { useEthersSigner } from "../../hooks/useEthersSigner";
-import { Toast } from "../ui/Toast";
-
-type ToastState = {
-  title: string;
-  caption?: string;
-  variant: "success" | "error" | "info";
-};
+import type { ToastVariant } from "../ui/Toast";
 
 type CreateProposalProps = {
   onCreated?: () => void;
+  onNotify?: (toast: { title: string; caption?: string; variant: ToastVariant }) => void;
 };
 
-export function CreateProposal({ onCreated }: CreateProposalProps) {
+export function CreateProposal({ onCreated, onNotify }: CreateProposalProps) {
   const [title, setTitle] = useState("");
   const [opts, setOpts] = useState<string[]>(["", ""]);
   const [startLocal, setStartLocal] = useState<string>("");
   const [endLocal, setEndLocal] = useState<string>("");
-  const [toast, setToast] = useState<ToastState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -80,7 +74,7 @@ export function CreateProposal({ onCreated }: CreateProposalProps) {
       const defaults = computeDefaultDateRange();
       setStartLocal(defaults.start);
       setEndLocal(defaults.end);
-      setToast({
+      onNotify?.({
         title: "✅ Proposal created successfully!",
         caption: `Transaction: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
         variant: "success",
@@ -89,7 +83,7 @@ export function CreateProposal({ onCreated }: CreateProposalProps) {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
-      setToast({
+      onNotify?.({
         title: "❌ Proposal failed",
         caption: message,
         variant: "error",
@@ -182,15 +176,6 @@ export function CreateProposal({ onCreated }: CreateProposalProps) {
       )}
 
       {error && <div className="alert alert--error">❌ {error}</div>}
-
-      <Toast open={Boolean(toast)} variant={toast?.variant ?? "info"} autoHideMs={5000} onClose={() => setToast(null)}>
-        {toast && (
-          <div>
-            <div className="toast__title">{toast.title}</div>
-            {toast.caption && <div className="toast__caption">{toast.caption}</div>}
-          </div>
-        )}
-      </Toast>
     </section>
   );
 }

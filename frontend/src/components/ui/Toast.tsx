@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 
-type ToastVariant = "success" | "error" | "info";
+export type ToastVariant = "success" | "error" | "info";
 
 export type ToastProps = {
   open: boolean;
