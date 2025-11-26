@@ -366,6 +366,10 @@
   background: #ffe8a3;
 }
 
+.status-pill.voted-pill {
+  background: #ffe8a3;
+}
+
 .status-pill.active {
   background: #ffc3c3;
 }
@@ -586,6 +590,13 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+}
+
+.detail-header__pills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .detail-meta {

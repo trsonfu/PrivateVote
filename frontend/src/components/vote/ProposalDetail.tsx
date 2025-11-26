@@ -15,9 +15,19 @@ type ToastState = {
   variant: "success" | "error" | "info";
 };
 
-export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; onBack: () => void }) {
+type ProposalMeta = {
+  title: string;
+  options: readonly string[];
+  startTime: bigint;
+  endTime: bigint;
+  finalized: boolean;
+  pending: boolean;
+};
+
+export function ProposalDetail({ id, meta, onBack }: { id: number; meta: ProposalMeta; onBack: () => void }) {
   const [counts, setCounts] = useState<number[] | null>(null);
   const [voters, setVoters] = useState<number | null>(null);
+  const [hasVoted, setHasVoted] = useState<boolean | undefined>(undefined);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { instance, isLoading: zamaLoading, error: zamaError } = useZamaInstance();
@@ -65,14 +75,35 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
         })) as bigint;
         if (!mounted) return;
         setVoters(Number(vc));
-      } catch {
-        // ignore network errors here
+      } catch (err) {
+        console.warn("Failed to refresh proposal stats", err);
       }
     })();
     return () => {
       mounted = false;
     };
   }, [id, finalized]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const signer = await signerPromise;
+        if (!signer) return;
+        const contract = new Contract(PRIVATE_VOTE_ADDRESS, PRIVATE_VOTE_ABI, signer);
+        const addr = await signer.getAddress();
+        const voted = await contract.hasVoted(id, addr);
+        if (!cancelled) {
+          setHasVoted(Boolean(voted));
+        }
+      } catch (err) {
+        console.warn("Failed to check hasVoted", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, signerPromise]);
 
   const vote = async (optionIndex: number) => {
     setError(null);
@@ -95,14 +126,17 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
           args: [BigInt(id)],
         })) as bigint;
         setVoters(Number(vc));
-      } catch {}
+      } catch (err) {
+        console.warn("Failed to refresh voter count", err);
+      }
+      setHasVoted(true);
       setToast({
         title: "✅ Vote submitted",
         caption: `Transaction: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
         variant: "success",
       });
-    } catch (e: any) {
-      const message = e.message ?? String(e);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       setError(message);
       setToast({
         title: "❌ Vote failed",
@@ -117,6 +151,14 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
   const finalize = async () => {
     setError(null);
     try {
+      if ((voters ?? 0) === 0) {
+        setToast({
+          title: "⚠️ No votes yet",
+          caption: "You need at least one vote before finalizing.",
+          variant: "info",
+        });
+        return;
+      }
       const signer = await signerPromise;
       if (!signer) throw new Error("Connect wallet");
       if (!instance) throw new Error("Encryption not ready");
@@ -127,9 +169,16 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
         const tx = await contract.requestFinalize(id);
         await tx.wait();
         setPending(true);
-      } catch (requestErr: any) {
-        const message = (requestErr?.shortMessage ?? requestErr?.message ?? "").toLowerCase();
-        if (message.includes("already finalized")) {
+      } catch (requestErr: unknown) {
+        const lowerMsg = (() => {
+          if (typeof requestErr === "object" && requestErr !== null) {
+            const shortMessage = (requestErr as { shortMessage?: string }).shortMessage;
+            const message = (requestErr as { message?: string }).message;
+            return (shortMessage ?? message ?? "").toLowerCase();
+          }
+          return String(requestErr).toLowerCase();
+        })();
+        if (lowerMsg.includes("already finalized")) {
           const finalResults = (await contract.getResults(id)) as readonly (bigint | number)[];
           setCounts(Array.from(finalResults).map((x) => Number(x)));
           setFinalized(true);
@@ -141,7 +190,7 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
           });
           return;
         }
-        if (!message.includes("pending")) {
+        if (!lowerMsg.includes("pending")) {
           throw requestErr;
         }
       }
@@ -183,8 +232,8 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
         caption: "Public decryption verified on-chain.",
         variant: "success",
       });
-    } catch (e: any) {
-      const message = e.message ?? String(e);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       setError(message);
       setToast({
         title: "❌ Finalize failed",
@@ -201,7 +250,14 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
       <div className="detail-card">
         <div className="detail-header">
           <h3 className="scribble">{meta.title}</h3>
-          {finalized ? <span className="status-pill finalized">✅ Finalized</span> : null}
+          <div className="detail-header__pills">
+            {hasVoted && !finalized && (
+              <span className="status-pill voted-pill" aria-label="You have already voted on this proposal">
+                ✅ You already voted
+              </span>
+            )}
+            {finalized ? <span className="status-pill finalized">✅ Finalized</span> : null}
+          </div>
         </div>
 
         <div>
@@ -230,7 +286,7 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: any; on
                 <button
                   className="brutal-btn brutal-btn--primary"
                   onClick={() => vote(i)}
-                  disabled={!canVote || sending || zamaLoading || !!zamaError}
+                  disabled={!canVote || sending || zamaLoading || !!zamaError || hasVoted}
                 >
                   Vote
                 </button>
