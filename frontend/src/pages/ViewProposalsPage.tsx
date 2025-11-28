@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ProposalList, type ProposalStatusFilter } from "../components/vote/ProposalList";
 
 const filters: { id: ProposalStatusFilter; label: string }[] = [
@@ -10,13 +10,41 @@ const filters: { id: ProposalStatusFilter; label: string }[] = [
   { id: "finalized", label: "Finalized" },
 ];
 
+const filterSet = new Set(filters.map((f) => f.id));
+const DEFAULT_FILTER: ProposalStatusFilter = "all";
+
+function parseFilter(search: string): ProposalStatusFilter {
+  const params = new URLSearchParams(search);
+  const status = params.get("status");
+  return filterSet.has(status as ProposalStatusFilter) ? (status as ProposalStatusFilter) : DEFAULT_FILTER;
+}
+
 type ViewProposalsPageProps = {
   refreshKey: number;
 };
 
 export function ViewProposalsPage({ refreshKey }: ViewProposalsPageProps) {
-  const [filter, setFilter] = useState<ProposalStatusFilter>("all");
+  const location = useLocation();
   const navigate = useNavigate();
+  const [filter, setFilter] = useState<ProposalStatusFilter>(() => parseFilter(location.search));
+
+  useEffect(() => {
+    const nextFilter = parseFilter(location.search);
+    setFilter((prev) => (prev === nextFilter ? prev : nextFilter));
+  }, [location.search]);
+
+  const handleFilterChange = (next: ProposalStatusFilter) => {
+    if (next === filter) return;
+    const params = new URLSearchParams(location.search);
+    if (next === DEFAULT_FILTER) {
+      params.delete("status");
+    } else {
+      params.set("status", next);
+    }
+    const search = params.toString();
+    navigate(`${location.pathname}${search ? `?${search}` : ""}`);
+    setFilter(next);
+  };
 
   return (
     <section className="page-stack">
@@ -37,7 +65,7 @@ export function ViewProposalsPage({ refreshKey }: ViewProposalsPageProps) {
             <button
               key={item.id}
               className={`filter-pill ${filter === item.id ? "active" : ""}`}
-              onClick={() => setFilter(item.id)}
+              onClick={() => handleFilterChange(item.id)}
             >
               {item.label}
             </button>
