@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPublicClient, http } from "viem";
 import { sepolia } from "viem/chains";
 import { PRIVATE_VOTE_ABI, PRIVATE_VOTE_ADDRESS } from "../../config/contract";
@@ -16,8 +16,24 @@ type Meta = {
   voters: number;
 };
 
-export function ProposalList({ refreshKey = 0 }: { refreshKey?: number }) {
-  const [count, setCount] = useState<number>(0);
+export type ProposalStatusFilter = "all" | "active" | "upcoming" | "ended" | "finalized";
+
+function deriveStatus(meta: Meta, nowSec: number): ProposalStatusFilter | "pending" {
+  if (meta.finalized) return "finalized";
+  const start = Number(meta.startTime);
+  const end = Number(meta.endTime);
+  if (nowSec < start) return "upcoming";
+  if (nowSec >= start && nowSec <= end) return "active";
+  return "ended";
+}
+
+export function ProposalList({
+  refreshKey = 0,
+  statusFilter = "all",
+}: {
+  refreshKey?: number;
+  statusFilter?: ProposalStatusFilter;
+}) {
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [metas, setMetas] = useState<Record<number, Meta>>({});
@@ -42,7 +58,6 @@ export function ProposalList({ refreshKey = 0 }: { refreshKey?: number }) {
         args: [],
       })) as bigint;
       if (!mountedRef.current) return;
-      setCount(Number(total));
       const freshMetas: Record<number, Meta> = {};
       for (let i = 0; i < Number(total); i++) {
         const res = (await client.readContract({
@@ -80,7 +95,6 @@ export function ProposalList({ refreshKey = 0 }: { refreshKey?: number }) {
         });
       setMetas(freshMetas);
       setOrderedIds(sortedIds);
-      setCount(sortedIds.length);
     } catch (err) {
       console.error('Failed to load proposals', err);
     } finally {
@@ -107,18 +121,29 @@ export function ProposalList({ refreshKey = 0 }: { refreshKey?: number }) {
     );
   }
 
-  const getStatusBadge = (meta: Meta) => {
-    const now = Date.now() / 1000;
-    const startTime = Number(meta.startTime);
-    const endTime = Number(meta.endTime);
+  const now = Date.now() / 1000;
 
-    if (meta.finalized) {
+  const filteredIds = useMemo(() => {
+    return orderedIds.filter((proposalId) => {
+      const meta = metas[proposalId];
+      if (!meta) return false;
+      if (statusFilter === "all") return true;
+      if (statusFilter === "finalized") return meta.finalized;
+      const derived = deriveStatus(meta, now);
+      if (statusFilter === "ended") return derived === "ended" && !meta.finalized;
+      return derived === statusFilter;
+    });
+  }, [metas, now, orderedIds, statusFilter]);
+
+  const getStatusBadge = (meta: Meta) => {
+    const derived = deriveStatus(meta, now);
+    if (derived === "finalized") {
       return <span className="status-pill finalized">✅ Finalized</span>;
     }
-    if (now < startTime) {
+    if (derived === "upcoming") {
       return <span className="status-pill pending">⏳ Pending</span>;
     }
-    if (now >= startTime && now <= endTime) {
+    if (derived === "active") {
       return <span className="status-pill active">🗳️ Active</span>;
     }
     return <span className="status-pill ended">⏰ Ended</span>;
@@ -133,16 +158,16 @@ export function ProposalList({ refreshKey = 0 }: { refreshKey?: number }) {
         </div>
       )}
 
-      {!loading && count === 0 && (
+      {!loading && filteredIds.length === 0 && (
         <div className="empty-panel">
           <div className="empty-panel__icon" aria-hidden="true">📋</div>
-          <p>No proposals yet. Create the first confidential survey!</p>
+          <p>No proposals match this filter yet. Try another status or create a new proposal!</p>
         </div>
       )}
 
-      {!loading && count > 0 && (
+      {!loading && filteredIds.length > 0 && (
         <div className="proposal-grid">
-          {orderedIds.map((proposalId) => (
+          {filteredIds.map((proposalId) => (
             <article
               key={proposalId}
               className="proposal-card"

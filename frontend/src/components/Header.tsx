@@ -1,11 +1,6 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../styles/Header.css";
-
-type NavTarget = "home" | "view" | "create";
-
-function emitNav(target: NavTarget) {
-  window.dispatchEvent(new CustomEvent<NavTarget>("neo-nav", { detail: target }));
-}
 
 function WalletAction() {
   return (
@@ -40,12 +35,28 @@ function WalletAction() {
   );
 }
 
+const primaryLinks = [
+  { path: "/", label: "🏠 Home", exact: true },
+  { path: "/proposals", label: "📋 View Proposals" },
+  { path: "/create", label: "✨ Create Proposal" },
+] as const;
+
 export function Header() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActivePath = (path: string, exact?: boolean) => {
+    if (exact) {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <>
       <header className="nav-bar neo-shell">
         <div className="brutal-container nav-inner">
-          <div className="brand-mark">
+          <Link to="/" className="brand-mark">
             <div className="brand-logo scribble">
               F<br />H
             </div>
@@ -53,18 +64,19 @@ export function Header() {
               <div className="brand-title scribble">FHEDBACK</div>
               <span className="brand-subtitle">Confidential Survey</span>
             </div>
-          </div>
+          </Link>
 
           <nav className="nav-links" aria-label="Primary navigation">
-            <button className="nav-link" type="button" onClick={() => emitNav("home")}>
-              🏠 Home
-            </button>
-            <button className="nav-link" type="button" onClick={() => emitNav("view")}>
-              📋 View Proposals
-            </button>
-            <button className="nav-link" type="button" onClick={() => emitNav("create")}>
-              ✨ Create Proposal
-            </button>
+            {primaryLinks.map((link) => (
+              <button
+                key={link.path}
+                type="button"
+                className={`nav-link ${isActivePath(link.path, link.exact) ? "active" : ""}`}
+                onClick={() => navigate(link.path)}
+              >
+                {link.label}
+              </button>
+            ))}
           </nav>
 
           <div className="nav-actions">
