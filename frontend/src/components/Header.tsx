@@ -35,11 +35,17 @@ function WalletAction() {
   );
 }
 
-const primaryLinks = [
+type PrimaryLink = {
+  path: string;
+  label: string;
+  exact?: boolean;
+};
+
+const primaryLinks: PrimaryLink[] = [
   { path: "/", label: "🏠 Home", exact: true },
   { path: "/proposals", label: "📋 View Proposals" },
   { path: "/create", label: "✨ Create Proposal" },
-] as const;
+];
 
 export function Header() {
   const navigate = useNavigate();

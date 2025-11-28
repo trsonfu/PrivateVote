@@ -24,25 +24,6 @@ type ProposalMeta = {
   pending: boolean;
 };
 
-function formatRelativeTime(timestamp: number, currentTime: number): string | null {
-  const diff = timestamp - currentTime;
-  // Only show relative time for future events
-  if (diff <= 0) return null;
-
-  const absDiff = Math.abs(diff);
-  if (absDiff < 60) return "in a few seconds";
-  if (absDiff < 3600) {
-    const mins = Math.floor(absDiff / 60);
-    return `in ${mins} minute${mins > 1 ? "s" : ""}`;
-  }
-  if (absDiff < 86400) {
-    const hours = Math.floor(absDiff / 3600);
-    return `in ${hours} hour${hours > 1 ? "s" : ""}`;
-  }
-  const days = Math.floor(absDiff / 86400);
-  return `in ${days} day${days > 1 ? "s" : ""}`;
-}
-
 function getTimeStatus(timestamp: number, currentTime: number): "upcoming" | "active" | "past" {
   if (timestamp > currentTime) return "upcoming";
   if (timestamp < currentTime) return "past";
@@ -67,7 +48,7 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: Proposa
     setPending(meta.pending);
   }, [meta.finalized, meta.pending]);
 
-  // Update time every minute for relative time display
+  // Update time every minute so status badges stay fresh
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Math.floor(Date.now() / 1000));
@@ -317,22 +298,12 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: Proposa
                 <span className="detail-meta-time-range__value">
                   {new Date(Number(meta.startTime) * 1000).toLocaleString()}
                 </span>
-                {formatRelativeTime(Number(meta.startTime), currentTime) && (
-                  <span className="detail-meta-time-range__relative">
-                    {formatRelativeTime(Number(meta.startTime), currentTime)}
-                  </span>
-                )}
               </div>
               <div className="detail-meta-time-range__item">
                 <span className="detail-meta-time-range__label">End</span>
                 <span className="detail-meta-time-range__value">
                   {new Date(Number(meta.endTime) * 1000).toLocaleString()}
                 </span>
-                {formatRelativeTime(Number(meta.endTime), currentTime) && (
-                  <span className="detail-meta-time-range__relative">
-                    {formatRelativeTime(Number(meta.endTime), currentTime)}
-                  </span>
-                )}
               </div>
             </div>
           </div>
