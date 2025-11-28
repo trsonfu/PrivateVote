@@ -48,23 +48,21 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: Proposa
     setPending(meta.pending);
   }, [meta.finalized, meta.pending]);
 
-  // Update time every minute so status badges stay fresh
+  // Update time every second so status badges and actions stay fresh
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Math.floor(Date.now() / 1000));
-    }, 60000); // Update every minute
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const canVote = useMemo(() => {
-    const now = Math.floor(Date.now() / 1000);
-    return now >= Number(meta.startTime) && now <= Number(meta.endTime) && !finalized;
-  }, [meta.endTime, meta.startTime, finalized]);
+    return currentTime >= Number(meta.startTime) && currentTime <= Number(meta.endTime) && !finalized;
+  }, [meta.endTime, meta.startTime, finalized, currentTime]);
 
   const canFinalize = useMemo(() => {
-    const now = Math.floor(Date.now() / 1000);
-    return now > Number(meta.endTime) && !finalized && !pending;
-  }, [meta.endTime, finalized, pending]);
+    return currentTime > Number(meta.endTime) && !finalized && !pending;
+  }, [meta.endTime, finalized, pending, currentTime]);
 
   useEffect(() => {
     let mounted = true;
