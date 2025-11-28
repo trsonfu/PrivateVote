@@ -600,9 +600,120 @@
 }
 
 .detail-meta {
-  color: var(--fh-muted);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+@media (max-width: 640px) {
+  .detail-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-meta-item {
+  border: var(--fh-outline);
+  border-radius: var(--fh-radius);
+  padding: 16px;
+  background: #fff;
+  box-shadow: var(--fh-shadow-offset);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.detail-meta-item--time-range {
+  flex: 1;
+}
+
+.detail-meta-item--time-range.detail-meta-item--upcoming {
+  background: #fff6c7;
+}
+
+.detail-meta-item--time-range.detail-meta-item--active {
+  background: #c9ffb5;
+}
+
+.detail-meta-item--time-range.detail-meta-item--past {
+  background: #f2f2f2;
+}
+
+.detail-meta-item--stats {
+  min-width: 140px;
+}
+
+.detail-meta-item__label {
   font-size: 14px;
-  margin: 12px 0;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--fh-ink);
+  letter-spacing: 0.8px;
+}
+
+.detail-meta-time-range {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.detail-meta-time-range__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.detail-meta-time-range__label {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--fh-ink);
+  letter-spacing: 0.8px;
+}
+
+.detail-meta-time-range__value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fh-ink);
+  line-height: 1.4;
+}
+
+.detail-meta-time-range__relative {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fh-muted);
+  font-style: italic;
+}
+
+.detail-meta-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-meta-stats__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-meta-stats__value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--fh-ink);
+  line-height: 1.2;
+}
+
+.detail-meta-stats__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fh-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .detail-options {

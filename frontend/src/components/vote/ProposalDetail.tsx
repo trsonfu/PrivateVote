@@ -24,12 +24,38 @@ type ProposalMeta = {
   pending: boolean;
 };
 
+function formatRelativeTime(timestamp: number, currentTime: number): string | null {
+  const diff = timestamp - currentTime;
+  // Only show relative time for future events
+  if (diff <= 0) return null;
+
+  const absDiff = Math.abs(diff);
+  if (absDiff < 60) return "in a few seconds";
+  if (absDiff < 3600) {
+    const mins = Math.floor(absDiff / 60);
+    return `in ${mins} minute${mins > 1 ? "s" : ""}`;
+  }
+  if (absDiff < 86400) {
+    const hours = Math.floor(absDiff / 3600);
+    return `in ${hours} hour${hours > 1 ? "s" : ""}`;
+  }
+  const days = Math.floor(absDiff / 86400);
+  return `in ${days} day${days > 1 ? "s" : ""}`;
+}
+
+function getTimeStatus(timestamp: number, currentTime: number): "upcoming" | "active" | "past" {
+  if (timestamp > currentTime) return "upcoming";
+  if (timestamp < currentTime) return "past";
+  return "active";
+}
+
 export function ProposalDetail({ id, meta, onBack }: { id: number; meta: ProposalMeta; onBack: () => void }) {
   const [counts, setCounts] = useState<number[] | null>(null);
   const [voters, setVoters] = useState<number | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | undefined>(undefined);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000));
   const { instance, isLoading: zamaLoading, error: zamaError } = useZamaInstance();
   const signerPromise = useEthersSigner();
   const [finalized, setFinalized] = useState<boolean>(meta.finalized);
@@ -40,6 +66,14 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: Proposa
     setFinalized(meta.finalized);
     setPending(meta.pending);
   }, [meta.finalized, meta.pending]);
+
+  // Update time every minute for relative time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Math.floor(Date.now() / 1000));
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const canVote = useMemo(() => {
     const now = Math.floor(Date.now() / 1000);
@@ -273,8 +307,44 @@ export function ProposalDetail({ id, meta, onBack }: { id: number; meta: Proposa
         </div>
 
         <div className="detail-meta">
-          Start: {new Date(Number(meta.startTime) * 1000).toLocaleString()} • End:{" "}
-          {new Date(Number(meta.endTime) * 1000).toLocaleString()} • Voters: {voters ?? "..."}
+          <div
+            className={`detail-meta-item detail-meta-item--time-range detail-meta-item--${getTimeStatus(Number(meta.endTime), currentTime)}`}
+          >
+            <div className="detail-meta-item__label">⏰ Voting Period</div>
+            <div className="detail-meta-time-range">
+              <div className="detail-meta-time-range__item">
+                <span className="detail-meta-time-range__label">Start</span>
+                <span className="detail-meta-time-range__value">
+                  {new Date(Number(meta.startTime) * 1000).toLocaleString()}
+                </span>
+                {formatRelativeTime(Number(meta.startTime), currentTime) && (
+                  <span className="detail-meta-time-range__relative">
+                    {formatRelativeTime(Number(meta.startTime), currentTime)}
+                  </span>
+                )}
+              </div>
+              <div className="detail-meta-time-range__item">
+                <span className="detail-meta-time-range__label">End</span>
+                <span className="detail-meta-time-range__value">
+                  {new Date(Number(meta.endTime) * 1000).toLocaleString()}
+                </span>
+                {formatRelativeTime(Number(meta.endTime), currentTime) && (
+                  <span className="detail-meta-time-range__relative">
+                    {formatRelativeTime(Number(meta.endTime), currentTime)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="detail-meta-item detail-meta-item--stats">
+            <div className="detail-meta-item__label">📊 Statistics</div>
+            <div className="detail-meta-stats">
+              <div className="detail-meta-stats__item">
+                <span className="detail-meta-stats__value">{voters ?? "..."}</span>
+                <span className="detail-meta-stats__label">Voters</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="detail-options">
