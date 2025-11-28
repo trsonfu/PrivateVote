@@ -54,7 +54,7 @@ export function ProposalList({
       const total = (await client.readContract({
         address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
         abi: PRIVATE_VOTE_ABI,
-        functionName: 'getProposalCount',
+        functionName: "getProposalCount",
         args: [],
       })) as bigint;
       if (!mountedRef.current) return;
@@ -63,13 +63,13 @@ export function ProposalList({
         const res = (await client.readContract({
           address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
           abi: PRIVATE_VOTE_ABI,
-          functionName: 'getProposal',
+          functionName: "getProposal",
           args: [BigInt(i)],
         })) as readonly [string, readonly string[], bigint, bigint, boolean, boolean];
         const voters = (await client.readContract({
           address: PRIVATE_VOTE_ADDRESS as `0x${string}`,
           abi: PRIVATE_VOTE_ABI,
-          functionName: 'getVoterCount',
+          functionName: "getVoterCount",
           args: [BigInt(i)],
         })) as bigint;
         freshMetas[i] = {
@@ -96,7 +96,7 @@ export function ProposalList({
       setMetas(freshMetas);
       setOrderedIds(sortedIds);
     } catch (err) {
-      console.error('Failed to load proposals', err);
+      console.error("Failed to load proposals", err);
     } finally {
       if (mountedRef.current) {
         setLoading(false);
@@ -107,19 +107,6 @@ export function ProposalList({
   useEffect(() => {
     fetchProposals();
   }, [fetchProposals, refreshKey]);
-
-  if (selected != null) {
-    return (
-      <ProposalDetail
-        id={selected}
-        meta={metas[selected]!}
-        onBack={() => {
-          setSelected(null);
-          fetchProposals();
-        }}
-      />
-    );
-  }
 
   const now = Date.now() / 1000;
 
@@ -134,6 +121,32 @@ export function ProposalList({
       return derived === statusFilter;
     });
   }, [metas, now, orderedIds, statusFilter]);
+
+  const selectedMeta = selected != null ? metas[selected] : null;
+
+  if (selected != null && selectedMeta) {
+    return (
+      <ProposalDetail
+        id={selected}
+        meta={selectedMeta}
+        onBack={() => {
+          setSelected(null);
+          fetchProposals();
+        }}
+      />
+    );
+  }
+
+  if (selected != null && !selectedMeta) {
+    return (
+      <section className="proposals-section">
+        <div className="loading-panel">
+          <div>🔄 Loading proposal details...</div>
+          <small>Please wait while we fetch the latest data</small>
+        </div>
+      </section>
+    );
+  }
 
   const getStatusBadge = (meta: Meta) => {
     const derived = deriveStatus(meta, now);
@@ -160,7 +173,9 @@ export function ProposalList({
 
       {!loading && filteredIds.length === 0 && (
         <div className="empty-panel">
-          <div className="empty-panel__icon" aria-hidden="true">📋</div>
+          <div className="empty-panel__icon" aria-hidden="true">
+            📋
+          </div>
           <p>No proposals match this filter yet. Try another status or create a new proposal!</p>
         </div>
       )}
@@ -168,14 +183,10 @@ export function ProposalList({
       {!loading && filteredIds.length > 0 && (
         <div className="proposal-grid">
           {filteredIds.map((proposalId) => (
-            <article
-              key={proposalId}
-              className="proposal-card"
-              onClick={() => setSelected(proposalId)}
-            >
+            <article key={proposalId} className="proposal-card" onClick={() => setSelected(proposalId)}>
               <div className="proposal-card__header">
                 <div>
-                  <h3 className="proposal-card__title">{metas[proposalId]?.title ?? 'Loading...'}</h3>
+                  <h3 className="proposal-card__title">{metas[proposalId]?.title ?? "Loading..."}</h3>
                   {metas[proposalId] && getStatusBadge(metas[proposalId])}
                 </div>
                 <button
@@ -193,10 +204,10 @@ export function ProposalList({
                 <div>📝 {metas[proposalId]?.options?.length ?? 0} options</div>
                 <div>👥 {metas[proposalId]?.voters ?? 0} voters</div>
                 <div>
-                  ⏰ Ends:{' '}
+                  ⏰ Ends:{" "}
                   {metas[proposalId]?.endTime
                     ? new Date(Number(metas[proposalId].endTime) * 1000).toLocaleDateString()
-                    : 'Loading...'}
+                    : "Loading..."}
                 </div>
               </div>
             </article>

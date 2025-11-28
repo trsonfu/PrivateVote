@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ProposalList, type ProposalStatusFilter } from "../components/vote/ProposalList";
 
 const filters: { id: ProposalStatusFilter; label: string }[] = [
@@ -16,6 +16,7 @@ type ViewProposalsPageProps = {
 
 export function ViewProposalsPage({ refreshKey }: ViewProposalsPageProps) {
   const [filter, setFilter] = useState<ProposalStatusFilter>("all");
+  const navigate = useNavigate();
 
   return (
     <section className="page-stack">
@@ -24,9 +25,9 @@ export function ViewProposalsPage({ refreshKey }: ViewProposalsPageProps) {
           <p className="scribble page-title">📋 View proposals</p>
           <p className="page-subtitle">Browse every survey, filter by status, and finalize results when voting ends.</p>
         </div>
-        <Link className="brutal-btn brutal-btn--primary" to="/create">
+        <button className="brutal-btn brutal-btn--primary" type="button" onClick={() => navigate("/create")}>
           ✨ Create Proposal
-        </Link>
+        </button>
       </header>
 
       <div className="filter-row">
@@ -48,4 +49,3 @@ export function ViewProposalsPage({ refreshKey }: ViewProposalsPageProps) {
     </section>
   );
 }
-
